@@ -1,9 +1,9 @@
 ## Sequence-to-sequence PyTorch implementations
-This repo contains various sequential models used to translate target language sentence into source language sentence.
+This repo contains various sequential models used to **translate Korean sentence into English sentence**.
 
 I used translation dataset, but you can apply these models to any sequence to sequence, text generation tasks such as text summarization, response generation, ...
 
-All of base codes are based on this great [seq2seq tutorial](https://github.com/bentrevett/pytorch-seq2seq).
+All of base codes are based on this great [**seq2seq tutorial**](https://github.com/bentrevett/pytorch-seq2seq).
 
 In this project, I specially used Korean-English translation corpus from [**AI Hub**](http://www.aihub.or.kr/) to apply torchtext into Korean dataset. 
 
