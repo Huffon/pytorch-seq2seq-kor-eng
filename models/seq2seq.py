@@ -88,6 +88,16 @@ class Seq2Seq(nn.Module):
         # source = [source input length, batch size]
         # target = [target output length, batch size]
 
+        # if target is None, check whether teacher_forcing is zero
+        if target is None:
+            assert teacher_forcing == 0, "Must be zero during inference"
+
+            # makes inference flag as True and defines dummy target sentences with max length as 100
+            inference = True
+            target = torch.zeros((100, source.shape[1])).long().fill_(self.config.sos_idx).to(self.config.device)
+        else:
+            inference = False
+
         # the length of the output shouldn't exceeds the lengths of target sentences
         target_max_len = target.shape[0]
         # batch size changes dynamically, so takes batch size from the batch of target sentences
@@ -100,11 +110,12 @@ class Seq2Seq(nn.Module):
         hidden, cell = self.encoder(source)
 
         # initial input to the decoder is <sos> tokens
-        input = target[0, :]
+        # input = target[0, :]
+        output = target[0, :]
         # input = [batch size]
 
         for time in range(1, target_max_len):
-            output, hidden, cell = self.decoder(input, hidden, cell)
+            output, hidden, cell = self.decoder(output, hidden, cell)
             # output contains the predicted results which has the size of output dim (eng_vocab_size)
             # output = [batch size, output dim]
 
@@ -121,7 +132,12 @@ class Seq2Seq(nn.Module):
 
             # if use teacher forcing, next input token is the ground-truth token
             # if we don't, next input token is the predicted token
-            input = (target[time] if teacher_force else top1)
+            # input = (target[time] if teacher_force else top1)
+            output = (target[time] if teacher_force else top1)
+
+            # during predict, when encounter <eos> token, return generated outputs
+            if inference and output.item() == self.config.eos_idx:
+                return outputs[:time]
 
         return outputs
 

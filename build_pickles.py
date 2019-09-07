@@ -1,8 +1,8 @@
 import os
 import pickle
 import argparse
-import pandas as pd
 
+import pandas as pd
 from pathlib import Path
 from utils import convert_to_dataset
 
@@ -99,5 +99,5 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
 
-    build_tokenizer()
+    # build_tokenizer()
     build_vocab(config)
