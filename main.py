@@ -44,7 +44,7 @@ if __name__ == '__main__':
     # Additional options
     parser.add_argument('--model', type=str, default='seq2seq', choices=['seq2seq'])
     parser.add_argument('--optim', type=str, default='Adam', choices=['SGD', 'Adam'])
-    parser.add_argument('--mode', type=str, default='train')
+    parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
     parser.add_argument('--save_model', type=str, default='model.pt')
 
     config = parser.parse_args()
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     eng = pickle.load(pickle_eng)
     config.eng_vocab_size = len(eng.vocab)
 
-    # add device information to configuration
+    # add device information to the configuration object
     config.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     main(config)

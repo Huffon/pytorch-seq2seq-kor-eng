@@ -1,4 +1,5 @@
 import os
+import re
 import pickle
 import argparse
 
@@ -13,22 +14,19 @@ from soynlp.tokenizer import LTokenizer
 
 def build_tokenizer():
     """
-    Train soynlp tokenizer which will be used to tokenize input sentence
+    Train soynlp tokenizer which will be used to tokenize Korean input sentence
     Returns:
 
     """
     print(f'Now building soy-nlp tokenizer . . .')
+
     data_dir = Path().cwd() / 'data'
     train_file = os.path.join(data_dir, 'train.csv')
 
     df = pd.read_csv(train_file, encoding='utf-8')
 
-    kor_lines = []
-    # if encounters non-text row, skips it
-    for idx, row in df.iterrows():
-        if type(row.korean) != str or type(row.english) != str:
-            continue
-        kor_lines.append(row.korean)
+    # if encounters non-text row, we should skip it
+    kor_lines = [row.korean for idx, row in df.iterrows() if type(row.korean) == str and type(row.english) == str]
 
     word_extractor = WordExtractor(min_frequency=5)
     word_extractor.train(kor_lines)
@@ -55,7 +53,6 @@ def build_vocab(config):
     cohesion_scores = pickle.load(pickle_tokenizer)
     tokenizer = LTokenizer(scores=cohesion_scores)
 
-    # To use packed padded sequences, tell the model how long the actual sequences are
     kor = ttd.Field(tokenize=tokenizer.tokenize,
                     init_token='<sos>',
                     eos_token='<eos>',
@@ -72,6 +69,7 @@ def build_vocab(config):
     train_data = convert_to_dataset(train_data, kor, eng)
 
     print(f'Build vocabulary using torchtext . . .')
+
     kor.build_vocab(train_data, min_freq=2)
     eng.build_vocab(train_data, min_freq=2)
 
@@ -99,5 +97,5 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
 
-    # build_tokenizer()
+    build_tokenizer()
     build_vocab(config)

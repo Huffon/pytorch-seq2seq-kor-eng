@@ -5,11 +5,10 @@ import torch
 from soynlp.tokenizer import LTokenizer
 from models.seq2seq import Seq2Seq
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 def predict(config):
-    # load tokenizer and torchtext Field
+    # load tokenizer and torchtext Fields
+
     pickle_tokenizer = open('pickles/tokenizer.pickle', 'rb')
     cohesion_scores = pickle.load(pickle_tokenizer)
     tokenizer = LTokenizer(scores=cohesion_scores)
@@ -34,19 +33,18 @@ def predict(config):
     tokenized = ['<sos>'] + tokenized + ['<eos>']
     indexed = [kor.vocab.stoi[token] for token in tokenized]
 
-    tensor = torch.LongTensor(indexed).to(device)  # [input length]
-    tensor = tensor.unsqueeze(1)  # [input length, 1] for adding batch dimension
+    tensor = torch.LongTensor(indexed).to(config.device)  # [input length]
+    tensor = tensor.unsqueeze(1)  # [input length, 1] : unsqueeze(1) to add batch size dimension
 
     translation_tensor_logits = model(tensor, None, 0)
     # translation_tensor_logits = [target length, 1, eng_vocab_size]
 
     translation_tensor = torch.argmax(translation_tensor_logits.squeeze(1), 1)
-    print(translation_tensor.shape)
-    # translation_tensor = [target length, 1]
+    # translation_tensor = [target length]
 
     translation = [eng.vocab.itos[token] for token in translation_tensor]
 
-    print(f'{config.input} is translated into {translation}')
+    print(f'{config.input} is translated into {translation[1:]}')
 
 
 if __name__ == '__main__':
@@ -85,6 +83,7 @@ if __name__ == '__main__':
     # add device information to configuration
     config.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    # add <sos> and <eos> tokens' indices used to predict the target sentence
     config.sos_idx = eng.vocab.stoi['<sos>']
     config.eos_idx = eng.vocab.stoi['<eos>']
 

@@ -15,15 +15,14 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def load_dataset(mode):
     """
-    Load train and test dataset and split train dataset to make validation dataset.
-    And finally convert train, validation and test dataset to pandas DataFrame.
-        mode: (string) configuration mode used to which dataset to load
+    Load train, valid and test dataset and convert train, validation and test dataset to pandas DataFrame.
     Args:
+        mode: (string) configuration mode used to which dataset to load
 
     Returns:
         (DataFrame) train, valid, test dataset converted to pandas DataFrame
     """
-    print(f'Loading AI Hub Kor-Eng translation dataset and convert it to pandas DataFrame . . .')
+    print(f'Loading AI Hub Kor-Eng translation dataset and converting it to pandas DataFrame . . .')
 
     data_dir = Path().cwd() / 'data'
 
@@ -59,18 +58,15 @@ def convert_to_dataset(data, kor, eng):
     Returns:
         (Dataset) torchtext Dataset
     """
-    # drop missing values from DataFrame
-    missing_rows = []
-    for idx, row in data.iterrows():
-        if type(row.korean) != str or type(row.english) != str:
-            missing_rows.append(idx)
+    # drop missing values not containing str value from DataFrame
+    missing_rows = [idx for idx, row in data.iterrows() if type(row.korean) != str or type(row.english) != str]
     data = data.drop(missing_rows)
 
-    # convert each row of DataFrame to torchtext 'Example' which contains kor and eng attributes
+    # convert each row of DataFrame to torchtext 'Example' containing 'kor' and 'eng' Fields
     list_of_examples = [Example.fromlist(row.tolist(),
                                          fields=[('kor', kor), ('eng', eng)]) for _, row in data.iterrows()]
 
-    list_of_examples = list_of_examples[:10000]
+    # list_of_examples = list_of_examples[:10000]
 
     # construct torchtext 'Dataset' using torchtext 'Example' list
     dataset = Dataset(examples=list_of_examples, fields=[('kor', kor), ('eng', eng)])
@@ -84,9 +80,9 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
     Args:
         batch_size: (integer) batch size used to make iterators
         mode: (string) configuration mode used to which iterator to make
-        train_data: (DataFrame) pandas DataFrame used to make train iterator
-        valid_data: (DataFrame) pandas DataFrame used to make validation iterator
-        test_data: (DataFrame) pandas DataFrame used to make test iterator
+        train_data: (DataFrame) pandas DataFrame used to build train iterator
+        valid_data: (DataFrame) pandas DataFrame used to build validation iterator
+        test_data: (DataFrame) pandas DataFrame used to build test iterator
 
     Returns:
         (BucketIterator) train, valid, test iterator
@@ -120,6 +116,8 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
 
     else:
         test_data = convert_to_dataset(test_data, kor, eng)
+
+        # defines dummy list will be passed to the BucketIterator
         dummy = list()
 
         # make iterator using test dataset
@@ -136,10 +134,13 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
 
 def init_weights(model):
     """
-    Seq2Seq paper introduces the method to initialize the model's parameter.
-    And this method implements that methodology
-    :param model: Model object whose parameters will be initialized with the value between -0.08 and 0.08
-    :return:
+    Seq2Seq paper introduces the method to properly initialize the model's parameter.
+    And this 'init_weights ' method implements that methodology
+    Args:
+        model: Model object whose parameters will be initialized with the value between -0.08 and 0.08
+
+    Returns:
+        
     """
     for _, param in model.named_parameters():
         nn.init.uniform_(param.data, -0.08, 0.08)
