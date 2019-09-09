@@ -4,16 +4,16 @@ import torch.nn as nn
 
 
 class Encoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, params):
         super(Encoder, self).__init__()
-        self.embedding = nn.Embedding(config.kor_vocab_size, config.embed_dim)
+        self.embedding = nn.Embedding(params.kor_vocab_size, params.embed_dim)
 
-        self.lstm = nn.LSTM(config.embed_dim,
-                            config.hidden_dim,
-                            config.n_layer,
-                            dropout=config.dropout)
+        self.lstm = nn.LSTM(params.embed_dim,
+                            params.hidden_dim,
+                            params.n_layer,
+                            dropout=params.dropout)
 
-        self.dropout = nn.Dropout(config.dropout)
+        self.dropout = nn.Dropout(params.dropout)
 
     def forward(self, input):
         # input = [input length, batch size]
@@ -33,18 +33,18 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, params):
         super(Decoder, self).__init__()
-        self.embedding = nn.Embedding(config.eng_vocab_size, config.embed_dim)
+        self.embedding = nn.Embedding(params.eng_vocab_size, params.embed_dim)
 
-        self.lstm = nn.LSTM(config.embed_dim,
-                            config.hidden_dim,
-                            config.n_layer,
-                            dropout=config.dropout)
+        self.lstm = nn.LSTM(params.embed_dim,
+                            params.hidden_dim,
+                            params.n_layer,
+                            dropout=params.dropout)
 
-        self.fc = nn.Linear(config.hidden_dim, config.eng_vocab_size)
+        self.fc = nn.Linear(params.hidden_dim, params.eng_vocab_size)
 
-        self.dropout = nn.Dropout(config.dropout)
+        self.dropout = nn.Dropout(params.dropout)
 
     def forward(self, input, hidden, cell):
         # input  = [batch size]
@@ -76,11 +76,11 @@ class Decoder(nn.Module):
 
 
 class Seq2Seq(nn.Module):
-    def __init__(self, config):
+    def __init__(self, params):
         super(Seq2Seq, self).__init__()
-        self.config = config
-        self.encoder = Encoder(config)
-        self.decoder = Decoder(config)
+        self.params = params
+        self.encoder = Encoder(params)
+        self.decoder = Decoder(params)
 
     def forward(self, source, target, teacher_forcing=0.5):
         # source = [source length, batch size]
@@ -93,7 +93,7 @@ class Seq2Seq(nn.Module):
             # makes inference flag True and defines dummy target sentences with max length as 100
             inference = True
 
-            target = torch.zeros((100, source.shape[1])).long().fill_(self.config.sos_idx).to(self.config.device)
+            target = torch.zeros((100, source.shape[1])).long().fill_(self.params.sos_idx).to(self.params.device)
             # target = [100, 1] filled with <sos> tokens
         else:
             inference = False
@@ -104,7 +104,7 @@ class Seq2Seq(nn.Module):
         batch_size = target.shape[1]
 
         # define 'outputs' tensor used to store each time step's output ot the decoder
-        outputs = torch.zeros(target_max_len, batch_size, self.config.eng_vocab_size).to(self.config.device)
+        outputs = torch.zeros(target_max_len, batch_size, self.params.eng_vocab_size).to(self.params.device)
         # outputs = [target length, batch size, eng_vocab_size]
 
         # last hidden and cell states of the encoder is used to initialize the initial hidden state of the decoder
@@ -135,7 +135,7 @@ class Seq2Seq(nn.Module):
             output = (target[time] if teacher_force else top1)
 
             # during inference time, when encounters <eos> token, return generated outputs
-            if inference and output.item() == self.config.eos_idx:
+            if inference and output.item() == self.params.eos_idx:
                 return outputs[:time]
 
         return outputs

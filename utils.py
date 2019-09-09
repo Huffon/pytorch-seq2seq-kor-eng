@@ -1,4 +1,5 @@
 import os
+import json
 import pickle
 from pathlib import Path
 
@@ -9,6 +10,10 @@ import pandas as pd
 from torchtext import data as ttd
 from torchtext.data import Example
 from torchtext.data import Dataset
+
+from models.seq2seq import Seq2Seq
+from models.seq2seq_gru import Seq2SeqGRU
+from models.seq2seq_attention import Seq2SeqAttention
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -66,7 +71,7 @@ def convert_to_dataset(data, kor, eng):
     list_of_examples = [Example.fromlist(row.tolist(),
                                          fields=[('kor', kor), ('eng', eng)]) for _, row in data.iterrows()]
 
-    # list_of_examples = list_of_examples[:10000]
+    list_of_examples = list_of_examples[:10000]
 
     # construct torchtext 'Dataset' using torchtext 'Example' list
     dataset = Dataset(examples=list_of_examples, fields=[('kor', kor), ('eng', eng)])
@@ -90,7 +95,6 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
     # load text and label field made by build_pickles.py
     file_kor = open('pickles/kor.pickle', 'rb')
     kor = pickle.load(file_kor)
-    pad_idx = kor.vocab.stoi[kor.pad_token]
 
     file_eng = open('pickles/eng.pickle', 'rb')
     eng = pickle.load(file_eng)
@@ -112,7 +116,7 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
             batch_size=batch_size,
             device=device)
 
-        return train_iter, valid_iter, pad_idx
+        return train_iter, valid_iter
 
     else:
         test_data = convert_to_dataset(test_data, kor, eng)
@@ -129,21 +133,28 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
             batch_size=batch_size,
             device=device)
 
-        return test_iter, pad_idx
+        return test_iter
 
 
 def init_weights(model):
     """
     Seq2Seq paper introduces the method to properly initialize the model's parameter.
-    And this 'init_weights ' method implements that methodology
+    GRU paper states the parameters are initialized from a normal distribution with a mean of 0 and a stdev of 0.01.
+    And this 'init_weights ' method implements those methodologies
     Args:
         model: Model object whose parameters will be initialized with the value between -0.08 and 0.08
 
     Returns:
         
     """
-    for _, param in model.named_parameters():
-        nn.init.uniform_(param.data, -0.08, 0.08)
+    if type(model) == type(Seq2Seq):
+        for _, param in model.named_parameters():
+            nn.init.uniform_(param.data, -0.08, 0.08)
+
+    elif type(model) == type(Seq2SeqGRU):
+        print('hi')
+        for _, param in model.named_parameters():
+            nn.init.normal_(param.data, mean=0, std=0.01)
 
 
 def epoch_time(start_time, end_time):
@@ -161,3 +172,48 @@ def epoch_time(start_time, end_time):
     elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
 
     return elapsed_mins, elapsed_secs
+
+
+class Params:
+    """
+    Class that loads hyperparameters from a json file.
+    Example:
+    ```
+    params = Params(json_path)
+    print(params.learning_rate)
+    params.learning_rate = 0.5  # change the value of learning_rate in params
+    ```
+    """
+
+    def __init__(self, json_path):
+        self.update(json_path)
+        self.load_vocab()
+
+    def update(self, json_path):
+        """Loads parameters from json file"""
+        with open(json_path) as f:
+            params = json.load(f)
+            self.__dict__.update(params)
+
+    def load_vocab(self):
+        # load kor and eng vocabs to add vocab size configuration
+        pickle_kor = open('pickles/kor.pickle', 'rb')
+        kor = pickle.load(pickle_kor)
+
+        pickle_eng = open('pickles/eng.pickle', 'rb')
+        eng = pickle.load(pickle_eng)
+
+        # add device information to the configuration object
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        # add <sos> and <eos> tokens' indices used to predict the target sentence
+        params = {'kor_vocab_size': len(kor.vocab), 'eng_vocab_size': len(eng.vocab),
+                  'sos_idx': eng.vocab.stoi['<sos>'], 'eos_idx': eng.vocab.stoi['<eos>'],
+                  'pad_idx': eng.vocab.stoi['<pad>'], 'device': device}
+
+        self.__dict__.update(params)
+
+    @property
+    def dict(self):
+        """Gives dict-like access to Params instance by `params.dict['learning_rate']`"""
+        return self.__dict__
