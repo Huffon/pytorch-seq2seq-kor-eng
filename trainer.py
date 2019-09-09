@@ -53,7 +53,6 @@ class Trainer:
         best_valid_loss = float('inf')
 
         self.model.train()
-        # Seq2Seq model initializes weights with uniform distribution range from -0.08 to 0.08
         self.model.apply(init_weights)
 
         print(self.model)

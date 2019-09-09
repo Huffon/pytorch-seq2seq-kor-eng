@@ -71,8 +71,6 @@ def convert_to_dataset(data, kor, eng):
     list_of_examples = [Example.fromlist(row.tolist(),
                                          fields=[('kor', kor), ('eng', eng)]) for _, row in data.iterrows()]
 
-    list_of_examples = list_of_examples[:10000]
-
     # construct torchtext 'Dataset' using torchtext 'Example' list
     dataset = Dataset(examples=list_of_examples, fields=[('kor', kor), ('eng', eng)])
 
@@ -142,7 +140,7 @@ def init_weights(model):
     GRU paper states the parameters are initialized from a normal distribution with a mean of 0 and a stdev of 0.01.
     And this 'init_weights ' method implements those methodologies
     Args:
-        model: Model object whose parameters will be initialized with the value between -0.08 and 0.08
+        model: Sequence-to-sequence Model object
 
     Returns:
         
@@ -152,7 +150,6 @@ def init_weights(model):
             nn.init.uniform_(param.data, -0.08, 0.08)
 
     elif type(model) == type(Seq2SeqGRU):
-        print('hi')
         for _, param in model.named_parameters():
             nn.init.normal_(param.data, mean=0, std=0.01)
 
@@ -203,7 +200,7 @@ class Params:
         pickle_eng = open('pickles/eng.pickle', 'rb')
         eng = pickle.load(pickle_eng)
 
-        # add device information to the configuration object
+        # add device information to the the params
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # add <sos> and <eos> tokens' indices used to predict the target sentence
