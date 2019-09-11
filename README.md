@@ -45,6 +45,15 @@ torchtext==0.4.0
 ```
 <br/>
 
+### Models
+- In this repository, following models are implemented for NMT. Other famous classification also models will be updated!
+    - [Sequence-to-sequence (using. LSTM)](https://github.com/Huffon/pytorch-seq2seq-kor-eng/blob/master/models/seq2seq.py)
+    - [Sequence-to-sequence (using. GRU)](https://github.com/Huffon/pytorch-seq2seq-kor-eng/blob/master/models/seq2seq_gru.py)
+    - [Sequence-to-sequence + Attention mechanism](https://github.com/Huffon/pytorch-seq2seq-kor-eng/blob/master/models/seq2seq_attention.py)
+
+
+<br/>
+
 ### Usage
 - Before training the model, you should train `soynlp tokenizer` on your training dataset and build vocabulary using following code. 
 - You can determine the size of vocabulary of Korean and English dataset. 
