@@ -1,6 +1,7 @@
 import random
 import torch
 import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class Encoder(nn.Module):
@@ -14,13 +15,16 @@ class Encoder(nn.Module):
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, source):
+    def forward(self, source, source_length):
         # source = [source length, batch size]
 
         embedded = self.dropout(self.embedding(source))
         # embedded = [source length, batch size, embed dim]
 
-        output, hidden = self.gru(embedded)
+        packed_embedded = pack_padded_sequence(embedded, source_length)
+        packed_output, hidden = self.gru(packed_embedded)
+
+        output, _ = pad_packed_sequence(packed_output)  # pad tokens are all-zeros
         # output = [source length, batch size, hidden dim]
         # hidden = [1, batch size, hidden dim]
 
@@ -82,7 +86,7 @@ class Seq2SeqGRU(nn.Module):
         self.encoder = Encoder(params)
         self.decoder = Decoder(params)
 
-    def forward(self, source, target, teacher_forcing=0.5):
+    def forward(self, source, source_length, target, teacher_forcing=0.5):
         # source = [source length, batch size]
         # target = [target length, batch size]
 
@@ -104,7 +108,7 @@ class Seq2SeqGRU(nn.Module):
         # outputs = [target length, batch size, output dim]
 
         # last hidden state of the encoder will be used as context
-        context = self.encoder(source)
+        context = self.encoder(source, source_length)
 
         # context also used as the initial hidden state of the decoder
         hidden = context

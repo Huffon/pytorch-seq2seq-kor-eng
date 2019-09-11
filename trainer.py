@@ -65,9 +65,10 @@ class Trainer:
             for batch in self.train_iter:
                 # For each batch, first zero the gradients
                 self.optimizer.zero_grad()
+                sources, sources_lengths = batch.kor
+                targets = batch.eng
 
-                sources, targets = batch.kor, batch.eng
-                predictions = self.model(sources, targets)
+                predictions = self.model(sources, sources_lengths, targets)
                 # targets     = [target length, batch size]
                 # predictions = [target length, batch size, output dim]
 
@@ -112,10 +113,11 @@ class Trainer:
 
         with torch.no_grad():
             for batch in self.valid_iter:
-                sources, targets = batch.kor, batch.eng
+                sources, sources_lengths = batch.kor
+                targets = batch.eng
 
                 # when validates or test the model, we shouldn't use teacher forcing
-                predictions = self.model(sources, targets, 0)
+                predictions = self.model(sources, sources_lengths, targets, 0)
 
                 predictions = predictions[1:].view(-1, predictions.shape[-1])
                 targets = targets[1:].view(-1)
@@ -134,8 +136,9 @@ class Trainer:
 
         with torch.no_grad():
             for batch in self.test_iter:
-                sources, targets = batch.kor, batch.eng
-                predictions = self.model(sources, targets, 0)
+                sources, sources_lengths = batch.kor
+                targets = batch.eng
+                predictions = self.model(sources, sources_lengths, targets, 0)
 
                 predictions = predictions[1:].view(-1, predictions.shape[-1])
                 targets = targets[1:].view(-1)

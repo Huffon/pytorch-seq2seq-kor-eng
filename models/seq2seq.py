@@ -1,6 +1,7 @@
 import random
 import torch
 import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class Encoder(nn.Module):
@@ -15,13 +16,16 @@ class Encoder(nn.Module):
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, source):
+    def forward(self, source, source_length):
         # input = [source length, batch size]
 
         embedded = self.embedding(source)
         # embedded = [source length, batch size, embed dim]
 
-        output, (hidden, cell) = self.lstm(embedded)
+        packed_embedded = pack_padded_sequence(embedded, source_length)
+        packed_output, (hidden, cell) = self.lstm(packed_embedded)
+
+        output, _ = pad_packed_sequence(packed_output)   # pad tokens are all-zeros
         # output = [source length, batch size, hidden dim]
 
         # hidden = [num layers, batch size, hidden dim]
@@ -82,7 +86,7 @@ class Seq2Seq(nn.Module):
         self.encoder = Encoder(params)
         self.decoder = Decoder(params)
 
-    def forward(self, source, target, teacher_forcing=0.5):
+    def forward(self, source, source_length, target, teacher_forcing=0.5):
         # source = [source length, batch size]
         # target = [target length, batch size]
 
@@ -107,7 +111,7 @@ class Seq2Seq(nn.Module):
         # outputs = [target length, batch size, output dim]
 
         # last hidden and cell states of the encoder is used to initialize the initial hidden state of the decoder
-        hidden, cell = self.encoder(source)
+        hidden, cell = self.encoder(source, source_length)
 
         # initial input to the decoder is <sos> tokens
         input = target[0, :]

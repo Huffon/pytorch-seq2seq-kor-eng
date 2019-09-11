@@ -50,10 +50,12 @@ def build_vocab(config):
     cohesion_scores = pickle.load(pickle_tokenizer)
     tokenizer = LTokenizer(scores=cohesion_scores)
 
+    # include lengths of the source sentences to use pack pad sequence
     kor = ttd.Field(tokenize=tokenizer.tokenize,
                     init_token='<sos>',
                     eos_token='<eos>',
-                    lower=True)
+                    lower=True,
+                    include_lengths=True)
 
     eng = ttd.Field(tokenize='spacy',
                     init_token='<sos>',

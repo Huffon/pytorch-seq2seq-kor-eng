@@ -1,6 +1,8 @@
 import pickle
 import argparse
 import torch
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 from utils import Params
 from soynlp.tokenizer import LTokenizer
@@ -10,14 +12,14 @@ from models.seq2seq_gru import Seq2SeqGRU
 from models.seq2seq_attention import Seq2SeqAttention
 
 
-def predict(params):
+def predict(config):
     params_dict = {
         'seq2seq': Params('configs/params.json'),
         'seq2seq_gru': Params('configs/params_gru.json'),
         'seq2seq_attention': Params('configs/params_attention.json'),
     }
 
-    params = params_dict[params.model]
+    params = params_dict[config.model]
 
     # load tokenizer and torchtext Fields
     pickle_tokenizer = open('pickles/tokenizer.pickle', 'rb')
@@ -37,7 +39,7 @@ def predict(params):
     }
 
     # select model and load trained model
-    model = model_type[params.model](params)
+    model = model_type[config.model](params)
     model.load_state_dict(torch.load(params.save_model))
     model.eval()
 
@@ -46,17 +48,59 @@ def predict(params):
     tokenized = ['<sos>'] + tokenized + ['<eos>']
     indexed = [kor.vocab.stoi[token] for token in tokenized]
 
-    tensor = torch.LongTensor(indexed).to(params.device)  # [source length]
-    tensor = tensor.unsqueeze(1)                          # [source length, 1] : unsqueeze(1) to add batch size
+    source_length = torch.LongTensor([len(indexed)]).to(params.device)
 
-    translation_tensor_logits = model(tensor, None, 0)
-    # translation_tensor_logits = [target length, 1, output dim]
+    tensor = torch.LongTensor(indexed).unsqueeze(1).to(params.device)  # [source length, 1]: unsqueeze to add batch size
 
-    translation_tensor = torch.argmax(translation_tensor_logits.squeeze(1), 1)
-    # translation_tensor = [target length] filed with word indices
+    if config.model == 'seq2seq_attention':
+        translation_tensor_logits, attention = model(tensor, source_length, None, 0)
+        # translation_tensor_logits = [target length, 1, output dim]
 
-    translation = ' '.join([eng.vocab.itos[token] for token in translation_tensor][1:])
+        translation_tensor = torch.argmax(translation_tensor_logits.squeeze(1), 1)
+        # translation_tensor = [target length] filed with word indices
+
+        translation = [eng.vocab.itos[token] for token in translation_tensor][1:]
+
+        attention = attention[1:]
+        display_attention(tokenized, translation, attention)
+    else:
+        translation_tensor_logits = model(tensor, source_length, None, 0)
+        translation_tensor = torch.argmax(translation_tensor_logits.squeeze(1), 1)
+        translation = [eng.vocab.itos[token] for token in translation_tensor][1:]
+
+    translation = ' '.join(translation)
     print(f'"{config.input}" is translated into "{translation}"')
+
+
+def display_attention(candidate, translation, attention):
+    """
+    displays the model's attention over the source sentence for each target token generated.
+    Args:
+        candidate: tokenized source tokens
+        translation: predicted translation
+        attention: a tensor containing attentions scores
+
+    Returns:
+    """
+    # attention = [target length, 1 size, source length]
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111)
+
+    attention = attention.squeeze(1).cpu().detach().numpy()
+    # attention = [target length, source length]
+
+    cax = ax.matshow(attention, cmap='bone')
+
+    ax.tick_params(labelsize=15)
+    ax.set_xticklabels([''] + [t.lower() for t in candidate], rotation=45)
+    ax.set_yticklabels([''] + translation)
+
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+
+    plt.show()
+    plt.close()
 
 
 if __name__ == '__main__':

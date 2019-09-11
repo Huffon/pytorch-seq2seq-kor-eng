@@ -2,6 +2,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class Encoder(nn.Module):
@@ -17,13 +18,16 @@ class Encoder(nn.Module):
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, source):
+    def forward(self, source, source_length):
         # source = [source length, batch size]
 
         embedded = self.dropout(self.embedding(source))
         # embedded = [source length, batch size, embed dim]
 
-        output, hidden = self.gru(embedded)
+        packed_embedded = pack_padded_sequence(embedded, source_length)
+        packed_output, hidden = self.gru(packed_embedded)
+
+        output, _ = pad_packed_sequence(packed_output)   # pad tokens are all-zeros
         # output = [source length, batch size, enc hidden dim * 2]
         # hidden = [num layers * 2, batch size, enc hidden dim]
         # [forward_1, backward_1, forward_2, backward_2, ..., forward_n, backward_n]
@@ -44,10 +48,12 @@ class Attention(nn.Module):
         self.attention = nn.Linear(params.dec_hidden_dim + (params.enc_hidden_dim * 2), params.dec_hidden_dim)
         self.v = nn.Parameter(torch.rand(params.dec_hidden_dim))
 
-    def forward(self, hidden, encoder_output):
+    def forward(self, hidden, encoder_output, mask):
         # takes previous hidden state from the decoder and stacked hidden states from the encoder
         # hidden         = [batch size, hidden dim]
         # encoder_output = [source length, batch size, enc hidden dim * 2]
+        # mask           = [batch size, source length]
+        # mask consists of 1 when the source sentence token is not a padding token, and 0 when it is a padding token
 
         hidden = hidden.unsqueeze(1)
         # hidden = [batch size, 1, dec hidden dim]
@@ -82,6 +88,9 @@ class Attention(nn.Module):
         attention = torch.bmm(v, energy).squeeze(1)
         # attention = [batch size, source length]
 
+        # using masking, force the attention to only be over non-padding elements
+        attention = attention.masked_fill(mask == 0, -1e10)
+
         # returns attention vector with source length, each element is between 0 and 1 and the entire vector sums to 1
         return F.softmax(attention, dim=1)
 
@@ -99,10 +108,11 @@ class Decoder(nn.Module):
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, target, hidden, encoder_output):
+    def forward(self, target, hidden, encoder_output, mask):
         # target         = [batch size]
         # hidden         = [batch size, dec hidden dim]
         # encoder_output = [source length, batch size, enc hidden dim * 2]
+        # mask           = [batch size, source length]
         # re-use the same context vector returned by the encoder for every time-step in the decoder
 
         target = target.unsqueeze(0)
@@ -112,7 +122,7 @@ class Decoder(nn.Module):
         # embedded = [1, batch size, embed dim]
 
         # takes the previous hidden state, all of the encoder hidden states and returns the attention vector
-        attention = self.attention(hidden, encoder_output)
+        attention = self.attention(hidden, encoder_output, mask)
         # attention = [batch size, source length]
 
         attention = attention.unsqueeze(1)
@@ -146,8 +156,8 @@ class Decoder(nn.Module):
         output = self.fc(torch.cat((output, weighted, embedded), dim=1))
         # output = [batch size, output dim]
 
-        # return a predicted output and a new hidden state
-        return output, hidden.squeeze(0)
+        # return a predicted output, a new hidden state and attention tensor
+        return output, hidden.squeeze(0), attention.squeeze(1)
 
 
 class Seq2SeqAttention(nn.Module):
@@ -157,7 +167,12 @@ class Seq2SeqAttention(nn.Module):
         self.encoder = Encoder(params)
         self.decoder = Decoder(params)
 
-    def forward(self, source, target, teacher_forcing=0.5):
+    def create_mask(self, source):
+        mask = (source != self.params.pad_idx).permute(1, 0)
+        # mask = [batch size, source length]
+        return mask
+
+    def forward(self, source, source_length, target, teacher_forcing=0.5):
         # source = [source length, batch size]
         # target = [target length, batch size]
 
@@ -178,21 +193,31 @@ class Seq2SeqAttention(nn.Module):
         outputs = torch.zeros(target_max_len, batch_size, self.params.output_dim).to(self.params.device)
         # outputs = [target length, batch size, output dim]
 
+        # define a tensor to store attentions that show which source tokens 'are looked up' by target tokens
+        attentions = torch.zeros(target_max_len, batch_size, source.shape[0]).to(self.params.device)
+        # attentions = [target length, batch size, source length]
+
         # encoder_output is all hidden states of the input sequence, back and forwards
         # hidden is the final forward and backward hidden states, passed through a linear layer
-        encoder_output, hidden = self.encoder(source)
+        encoder_output, hidden = self.encoder(source, source_length)
 
         # initial input to the decoder is <sos> tokens
         input = target[0, :]
         # input = [batch size]
 
-        for time in range(1, target_max_len):
-            output, hidden = self.decoder(input, hidden, encoder_output)
-            # output contains the predicted results which has the size of output dim
-            # output = [batch size, output dim]
+        mask = self.create_mask(source)
+        # mask = [batch size, source length]
 
-            # store the output of each time step at the 'outputs' tensor
+        for time in range(1, target_max_len):
+            output, hidden, attention = self.decoder(input, hidden, encoder_output, mask)
+            # output contains the predicted results which has the size of output dim
+            # output    = [batch size, output dim]
+            # hidden    = [batch size, dec hidden dim]
+            # attention = [batch size, source length]
+
+            # store the output and attention of each time step at the 'outputs' and 'attentions' tensor respectively
             outputs[time] = output
+            attentions[time] = attention
 
             # calculates boolean flag whether to use teacher forcing
             teacher_force = random.random() < teacher_forcing
@@ -206,9 +231,9 @@ class Seq2SeqAttention(nn.Module):
             # if we don't, next input token is the predicted token. naming 'output' to use generically
             input = (target[time] if teacher_force else top1)
 
-            # during inference time, when encounters <eos> token, return generated outputs
+            # during inference time, when encounters <eos> token, return generated outputs and attentions
             if inference and input.item() == self.params.eos_idx:
-                return outputs[:time]
+                return outputs[:time], attentions[:time]
 
         return outputs
 

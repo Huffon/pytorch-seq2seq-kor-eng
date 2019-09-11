@@ -35,6 +35,7 @@ Example:
 
 ```
 en-core-web-sm==2.1.0
+matplotlib==3.1.1
 numpy==1.16.4
 pandas==0.25.1
 scikit-learn==0.21.3
