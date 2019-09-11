@@ -1,8 +1,11 @@
 import pickle
 import argparse
+
 import torch
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.font_manager as fm
 
 from utils import Params
 from soynlp.tokenizer import LTokenizer
@@ -84,6 +87,9 @@ def display_attention(candidate, translation, attention):
     """
     # attention = [target length, 1 size, source length]
 
+    font_location = 'pickles/NanumSquareR.ttf'
+    fontprop = fm.FontProperties(fname=font_location)
+
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
 
@@ -93,7 +99,7 @@ def display_attention(candidate, translation, attention):
     cax = ax.matshow(attention, cmap='bone')
 
     ax.tick_params(labelsize=15)
-    ax.set_xticklabels([''] + [t.lower() for t in candidate], rotation=45)
+    ax.set_xticklabels([''] + [t.lower() for t in candidate], rotation=45, fontproperties=fontprop)
     ax.set_yticklabels([''] + translation)
 
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
