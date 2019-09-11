@@ -8,21 +8,20 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.embedding = nn.Embedding(params.input_dim, params.embed_dim)
 
-        # the dropout is used between each layer of a multi-layered RNN
-        # as we only use a single layer, don't pass the dropout as an argument
+        # dropout is used between each layer of a multi-layered RNN  as we only use a single layer, don't pass dropout
         self.gru = nn.GRU(params.embed_dim,
                           params.hidden_dim)
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, input):
-        # input = [input length, batch size]
+    def forward(self, source):
+        # source = [source length, batch size]
 
-        embedded = self.dropout(self.embedding(input))
-        # embedded = [input length, batch size, embed dim]
+        embedded = self.dropout(self.embedding(source))
+        # embedded = [source length, batch size, embed dim]
 
         output, hidden = self.gru(embedded)
-        # output = [input length, batch size, hidden dim]
+        # output = [source length, batch size, hidden dim]
         # hidden = [1, batch size, hidden dim]
 
         # return hidden state to initialize the first layer of the decoder
@@ -37,21 +36,20 @@ class Decoder(nn.Module):
         self.gru = nn.GRU(params.embed_dim + params.hidden_dim,
                           params.hidden_dim)
 
-        self.fc = nn.Linear(params.embed_dim + params.hidden_dim * 2, params.output_dim)
+        self.fc = nn.Linear(params.embed_dim + (params.hidden_dim * 2), params.output_dim)
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, input, hidden, context):
-        # input  = [batch size]
-        # hidden = [1, batch size, hidden dim]
+    def forward(self, target, hidden, context):
+        # target  = [batch size]
+        # hidden  = [1, batch size, hidden dim]
         # context = [1, batch size, hidden dim]
         # re-use the same context vector returned by the encoder for every time-step in the decoder
 
-        # add additional dimension to make the shape of the input same as the input dimension of Embedding layer
-        input = input.unsqueeze(0)
-        # input = [1, batch size]
+        target = target.unsqueeze(0)
+        # target = [1, batch size]
 
-        embedded = self.dropout(self.embedding(input))
+        embedded = self.dropout(self.embedding(target))
         # embedded = [1, batch size, embed dim]
 
         # pass current input token and context vector from the encoder to the GRU by concatenating them
@@ -59,17 +57,16 @@ class Decoder(nn.Module):
         # embed_con = [1, batch size, embed dim + hidden dim]
 
         output, hidden = self.gru(embed_con, hidden)
-
         # output = [1, batch size, hidden dim]
         # hidden = [1, batch size, hidden dim]
 
         # addition of current input token to the linear layer means this layer can directly see what the token is,
-        # without having to get this information from the hidden state.
+        # without having to get this information from the hidden state
 
         # concatenate current input token, hidden state and context vector from the encoder together as output
         # before feeding it through the linear layer to receive our predictions
         output = torch.cat((embedded.squeeze(0), hidden.squeeze(0), context.squeeze(0)), dim=1)
-        # output = [batch size, embed dim + hidden dim * 2]
+        # output = [batch size, embed dim + (hidden dim * 2)]
 
         prediction = self.fc(output)
         # prediction = [batch size, output dim]
@@ -95,18 +92,14 @@ class Seq2SeqGRU(nn.Module):
 
             # makes inference flag True and defines dummy target sentences with max length as 100
             inference = True
-
             target = torch.zeros((100, source.shape[1])).long().fill_(self.params.sos_idx).to(self.params.device)
             # target = [100, 1] filled with <sos> tokens
         else:
             inference = False
 
-        # the length of the output shouldn't exceeds the lengths of target sentences
         target_max_len = target.shape[0]
-        # batch size changes dynamically, so updates the batch size each time step
         batch_size = target.shape[1]
 
-        # define 'outputs' tensor used to store each time step's output ot the decoder
         outputs = torch.zeros(target_max_len, batch_size, self.params.output_dim).to(self.params.device)
         # outputs = [target length, batch size, output dim]
 
@@ -116,16 +109,16 @@ class Seq2SeqGRU(nn.Module):
         # context also used as the initial hidden state of the decoder
         hidden = context
 
-        # initial input to the decoder is <sos> tokens, naming 'output' to use generically
-        output = target[0, :]
-        # output = [batch size]
+        # initial input to the decoder is <sos> tokens
+        input = target[0, :]
+        # input = [batch size]
 
         for time in range(1, target_max_len):
-            output, hidden = self.decoder(output, hidden, context)
+            output, hidden = self.decoder(input, hidden, context)
             # output contains the predicted results which has the size of output dim
             # output = [batch size, output dim]
 
-            # store the output of each time step to the 'outputs' tensor
+            # store the output of each time step at the 'outputs' tensor
             outputs[time] = output
 
             # calculates boolean flag whether to use teacher forcing
@@ -138,10 +131,10 @@ class Seq2SeqGRU(nn.Module):
 
             # if use teacher forcing, next input token is the ground-truth token
             # if we don't, next input token is the predicted token. naming 'output' to use generically
-            output = (target[time] if teacher_force else top1)
+            input = (target[time] if teacher_force else top1)
 
             # during inference time, when encounters <eos> token, return generated outputs
-            if inference and output.item() == self.params.eos_idx:
+            if inference and input.item() == self.params.eos_idx:
                 return outputs[:time]
 
         return outputs

@@ -12,11 +12,11 @@ from models.seq2seq_attention import Seq2SeqAttention
 
 
 class Trainer:
-    def __init__(self, params, train_iter=None, valid_iter=None, test_iter=None):
+    def __init__(self, params, mode, train_iter=None, valid_iter=None, test_iter=None):
         self.params = params
 
         # Train mode
-        if self.params.mode == 'train':
+        if mode == 'train':
             self.train_iter = train_iter
             self.valid_iter = valid_iter
 
@@ -42,7 +42,7 @@ class Trainer:
 
         self.optimizer = optim_type[self.params.optim]
 
-        # CrossEntropyLoss calculates both the log softmax as well as the negative log-likelihood
+        # CrossEntropyLoss calculates both the log-softmax as well as the negative log-likelihood
         # when calculate the loss, padding token should be ignored because it's not related to the prediction
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.params.pad_idx)
         self.criterion.to(self.params.device)
@@ -68,11 +68,10 @@ class Trainer:
 
                 sources, targets = batch.kor, batch.eng
                 predictions = self.model(sources, targets)
-                # targets = [target sentence length, batch size]
-                # predictions = [target sentence length, batch size, output dim]
+                # targets     = [target length, batch size]
+                # predictions = [target length, batch size, output dim]
 
-                # we should flatten the ground-truth and predictions tensors
-                # because CrossEntropyLoss takes 2D inputs(predictions) with 1D targets
+                # flatten the ground-truth and predictions since CrossEntropyLoss takes 2D predictions with 1D targets
                 # +) in this process, we don't use 0-th token, since it is <sos> token
                 targets = targets[1:].view(-1)
                 predictions = predictions[1:].view(-1, predictions.shape[-1])

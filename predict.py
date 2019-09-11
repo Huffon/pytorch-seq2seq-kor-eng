@@ -46,26 +46,24 @@ def predict(params):
     tokenized = ['<sos>'] + tokenized + ['<eos>']
     indexed = [kor.vocab.stoi[token] for token in tokenized]
 
-    tensor = torch.LongTensor(indexed).to(params.device)  # [input length]
-    tensor = tensor.unsqueeze(1)  # [input length, 1] : unsqueeze(1) to add batch size dimension
+    tensor = torch.LongTensor(indexed).to(params.device)  # [source length]
+    tensor = tensor.unsqueeze(1)                          # [source length, 1] : unsqueeze(1) to add batch size
 
     translation_tensor_logits = model(tensor, None, 0)
-    # translation_tensor_logits = [target length, 1, eng_vocab_size]
+    # translation_tensor_logits = [target length, 1, output dim]
 
     translation_tensor = torch.argmax(translation_tensor_logits.squeeze(1), 1)
-    # translation_tensor = [target length]
+    # translation_tensor = [target length] filed with word indices
 
-    translation = [eng.vocab.itos[token] for token in translation_tensor]
-    translation = ' '.join(translation[1:])
-
+    translation = ' '.join([eng.vocab.itos[token] for token in translation_tensor][1:])
     print(f'"{config.input}" is translated into "{translation}"')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Kor-Eng Translation prediction')
 
-    # Additional options
-    parser.add_argument('--model', type=str, default='seq2seq', choices=['seq2seq', 'seq2seq_gru'])
+    # Vocabulary size options
+    parser.add_argument('--model', type=str, default='seq2seq', choices=['seq2seq', 'seq2seq_gru', 'seq2seq_attention'])
     parser.add_argument('--input', type=str, default='이 문서는 제출 할 필요 없어요.')
 
     config = parser.parse_args()

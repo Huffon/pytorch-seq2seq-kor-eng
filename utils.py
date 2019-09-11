@@ -8,19 +8,16 @@ import torch.nn as nn
 import pandas as pd
 
 from torchtext import data as ttd
-from torchtext.data import Example
-from torchtext.data import Dataset
+from torchtext.data import Example, Dataset
 
 from models.seq2seq import Seq2Seq
 from models.seq2seq_gru import Seq2SeqGRU
 from models.seq2seq_attention import Seq2SeqAttention
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 def load_dataset(mode):
     """
-    Load train, valid and test dataset and convert train, validation and test dataset to pandas DataFrame.
+    Load train, valid and test dataset as a pandas DataFrame
     Args:
         mode: (string) configuration mode used to which dataset to load
 
@@ -61,7 +58,7 @@ def convert_to_dataset(data, kor, eng):
         eng: torchtext Field containing English sentence
 
     Returns:
-        (Dataset) torchtext Dataset
+        (Dataset) torchtext Dataset containing 'kor' and 'eng' Fields
     """
     # drop missing values not containing str value from DataFrame
     missing_rows = [idx for idx, row in data.iterrows() if type(row.korean) != str or type(row.english) != str]
@@ -71,6 +68,8 @@ def convert_to_dataset(data, kor, eng):
     list_of_examples = [Example.fromlist(row.tolist(),
                                          fields=[('kor', kor), ('eng', eng)]) for _, row in data.iterrows()]
 
+    list_of_examples = list_of_examples[:10000]
+
     # construct torchtext 'Dataset' using torchtext 'Example' list
     dataset = Dataset(examples=list_of_examples, fields=[('kor', kor), ('eng', eng)])
 
@@ -79,7 +78,7 @@ def convert_to_dataset(data, kor, eng):
 
 def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None):
     """
-    Convert pandas DataFrame to torchtext Dataset and make iterator used to train and test
+    Convert pandas DataFrame to torchtext Dataset and make iterator which will be used to train and test the model
     Args:
         batch_size: (integer) batch size used to make iterators
         mode: (string) configuration mode used to which iterator to make
@@ -96,6 +95,8 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
 
     file_eng = open('pickles/eng.pickle', 'rb')
     eng = pickle.load(file_eng)
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # convert pandas DataFrame to torchtext dataset
     if mode == 'train':
@@ -180,7 +181,7 @@ def epoch_time(start_time, end_time):
 
 class Params:
     """
-    Class that loads hyperparameters from a json file.
+    Class that loads hyperparameters from a json file
     Example:
     ```
     params = Params(json_path)

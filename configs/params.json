@@ -15,6 +15,5 @@
     "embed_dim": 256,
     "hidden_dim": 512,
     "n_layer": 4,
-    "dropout": 0.5,
-    "bidirectional": true
+    "dropout": 0.5
 }

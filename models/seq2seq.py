@@ -15,14 +15,14 @@ class Encoder(nn.Module):
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, input):
-        # input = [input length, batch size]
+    def forward(self, source):
+        # input = [source length, batch size]
 
-        embedded = self.embedding(input)
-        # embedded = [input length, batch size, embed dim]
+        embedded = self.embedding(source)
+        # embedded = [source length, batch size, embed dim]
 
         output, (hidden, cell) = self.lstm(embedded)
-        # output = [input length, batch size, hidden dim]
+        # output = [source length, batch size, hidden dim]
 
         # hidden = [num layers, batch size, hidden dim]
         # cell   = [num layers, batch size, hidden dim]
@@ -46,26 +46,26 @@ class Decoder(nn.Module):
 
         self.dropout = nn.Dropout(params.dropout)
 
-    def forward(self, input, hidden, cell):
-        # input  = [batch size]
-        # hidden = [num_layers, batch size, hidden dim]
-        # cell   = [num_layers, batch size, hidden dim]
+    def forward(self, target, hidden, cell):
+        # target  = [batch size]
+        # hidden  = [num_layers, batch size, hidden dim]
+        # cell    = [num_layers, batch size, hidden dim]
 
-        # add additional dimension to make the shape of the input same as the input dimension of Embedding layer
-        input = input.unsqueeze(0)
-        # input = [1, batch size]
+        target = target.unsqueeze(0)
+        # target = [1, batch size]
 
-        embedded = self.dropout(self.embedding(input))
+        embedded = self.dropout(self.embedding(target))
         # embedded = [1, batch size, embed dim]
 
         # at first initialize weights with the encoder's last hidden and cell states
-        # after that using weights of the decoder's hidden and cell states from previous time step
+        # after that using weights of the decoder's previous hidden and cell states
         output, (hidden, cell) = self.lstm(embedded, (hidden, cell))
 
         # output = [1, batch size, hidden dim]
+
         # hidden = [num layers, batch size, hidden dim]
-        # [forward_layer_0, forward_layer_1, ..., forward_layer_n]
         # cell   = [num layers, batch size, hidden dim]
+        # [forward_layer_0, forward_layer_1, ..., forward_layer_n]
 
         assert output.squeeze(0).shape == hidden[-1, :, :].shape
 
@@ -92,13 +92,12 @@ class Seq2Seq(nn.Module):
 
             # makes inference flag True and defines dummy target sentences with max length as 100
             inference = True
-
             target = torch.zeros((100, source.shape[1])).long().fill_(self.params.sos_idx).to(self.params.device)
             # target = [100, 1] filled with <sos> tokens
         else:
             inference = False
 
-        # the length of the output shouldn't exceeds the lengths of target sentences
+        # the length of the output shouldn't exceed the length of target sentences
         target_max_len = target.shape[0]
         # batch size changes dynamically, so updates the batch size each time step
         batch_size = target.shape[1]
@@ -110,16 +109,16 @@ class Seq2Seq(nn.Module):
         # last hidden and cell states of the encoder is used to initialize the initial hidden state of the decoder
         hidden, cell = self.encoder(source)
 
-        # initial input to the decoder is <sos> tokens, naming 'output' to use generically
-        output = target[0, :]
-        # output = [batch size]
+        # initial input to the decoder is <sos> tokens
+        input = target[0, :]
+        # input = [batch size]
 
         for time in range(1, target_max_len):
-            output, hidden, cell = self.decoder(output, hidden, cell)
+            output, hidden, cell = self.decoder(input, hidden, cell)
             # output contains the predicted results which has the size of output dim
             # output = [batch size, output dim]
 
-            # store the output of each time step to the 'outputs' tensor
+            # store the output of each time step at the 'outputs' tensor
             outputs[time] = output
 
             # calculates boolean flag whether to use teacher forcing
@@ -132,10 +131,10 @@ class Seq2Seq(nn.Module):
 
             # if use teacher forcing, next input token is the ground-truth token
             # if we don't, next input token is the predicted token. naming 'output' to use generically
-            output = (target[time] if teacher_force else top1)
+            input = (target[time] if teacher_force else top1)
 
             # during inference time, when encounters <eos> token, return generated outputs
-            if inference and output.item() == self.params.eos_idx:
+            if inference and input.item() == self.params.eos_idx:
                 return outputs[:time]
 
         return outputs

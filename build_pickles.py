@@ -13,7 +13,7 @@ from soynlp.tokenizer import LTokenizer
 
 def build_tokenizer():
     """
-    Train soynlp tokenizer which will be used to tokenize Korean input sentence
+    Train soynlp tokenizer which will be used to tokenize Korean input sentence using training corpus
     Returns:
 
     """
@@ -25,7 +25,7 @@ def build_tokenizer():
     df = pd.read_csv(train_file, encoding='utf-8')
 
     # if encounters non-text row, we should skip it
-    kor_lines = [row.korean for idx, row in df.iterrows() if type(row.korean) == str and type(row.english) == str]
+    kor_lines = [row.korean for _, row in df.iterrows() if type(row.korean) == str and type(row.english) == str]
 
     word_extractor = WordExtractor(min_frequency=5)
     word_extractor.train(kor_lines)
@@ -39,15 +39,13 @@ def build_tokenizer():
 
 def build_vocab(config):
     """
-    Build vocab used to convert input sentence into word indices using soynlp tokenizer
+    Build vocabulary used to convert input sentence into word indices using soynlp and spacy tokenizer
     Args:
         config: configuration containing various options
-        tokenizer: soynlp tokenizer used to struct torchtext Field object
 
     Returns:
 
     """
-
     pickle_tokenizer = open('pickles/tokenizer.pickle', 'rb')
     cohesion_scores = pickle.load(pickle_tokenizer)
     tokenizer = LTokenizer(scores=cohesion_scores)
@@ -69,8 +67,8 @@ def build_vocab(config):
 
     print(f'Build vocabulary using torchtext . . .')
 
-    kor.build_vocab(train_data, min_freq=2)
-    eng.build_vocab(train_data, min_freq=2)
+    kor.build_vocab(train_data, max_size=config.kor_vocab)
+    eng.build_vocab(train_data, max_size=config.eng_vocab)
 
     print(f'Unique tokens in Korean vocabulary: {len(kor.vocab)}')
     print(f'Unique tokens in English vocabulary: {len(eng.vocab)}')
@@ -81,11 +79,11 @@ def build_vocab(config):
     print(f'Most commonly used English words are as follows:')
     print(eng.vocab.freqs.most_common(20))
 
-    file_kor = open('pickles/kor.pickle', 'wb')
-    pickle.dump(kor, file_kor)
+    with open('pickles/kor.pickle', 'wb') as kor_file:
+        pickle.dump(kor, kor_file)
 
-    file_eng = open('pickles/eng.pickle', 'wb')
-    pickle.dump(eng, file_eng)
+    with open('pickles/eng.pickle', 'wb') as eng_file:
+        pickle.dump(eng, eng_file)
 
 
 if __name__ == '__main__':
