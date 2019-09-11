@@ -25,12 +25,12 @@ class Trainer:
             self.test_iter = test_iter
 
         model_type = {
-            'seq2seq': Seq2Seq(self.params),
-            'seq2seq_gru': Seq2SeqGRU(self.params),
-            'seq2seq_attention': Seq2SeqAttention(self.params),
+            'seq2seq': Seq2Seq,
+            'seq2seq_gru': Seq2SeqGRU,
+            'seq2seq_attention': Seq2SeqAttention,
         }
 
-        self.model = model_type[self.params.model]
+        self.model = model_type[self.params.model](self.params)
         self.model.to(self.params.device)
 
         # SGD updates all parameters with the same learning rate
@@ -103,8 +103,8 @@ class Trainer:
                 torch.save(self.model.state_dict(), self.params.save_model)
 
             print(f'Epoch: {epoch+1:02} | Epoch Time: {epoch_mins}m {epoch_secs}s')
-            print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}%')
-            print(f'\tVal. Loss: {valid_loss:.3f} | Val. PPL: {math.exp(valid_loss):7.3f}%')
+            print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
+            print(f'\tVal. Loss: {valid_loss:.3f} | Val. PPL: {math.exp(valid_loss):7.3f}')
 
     def evaluate(self):
         epoch_loss = 0
@@ -146,4 +146,4 @@ class Trainer:
                 epoch_loss += loss.item()
 
         test_loss = epoch_loss / len(self.test_iter)
-        print(f'Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f}%')
+        print(f'Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f}')

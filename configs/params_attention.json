@@ -13,8 +13,9 @@
     "num_epoch": 10,
 
     "embed_dim": 256,
-    "hidden_dim": 512,
+    "enc_hidden_dim": 512,
+    "dec_hidden_dim": 512,
     "n_layer": 1,
     "dropout": 0.5,
-    "bidirectional": false
+    "bidirectional": true
 }

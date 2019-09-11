@@ -153,6 +153,13 @@ def init_weights(model):
         for _, param in model.named_parameters():
             nn.init.normal_(param.data, mean=0, std=0.01)
 
+    elif type(model) == type(Seq2SeqAttention):
+        for name, param in m.named_parameters():
+            if 'weight' in name:
+                nn.init.normal_(param.data, mean=0, std=0.01)
+            else:
+                nn.init.constant_(param.data, 0)
+
 
 def epoch_time(start_time, end_time):
     """
@@ -204,7 +211,7 @@ class Params:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # add <sos> and <eos> tokens' indices used to predict the target sentence
-        params = {'kor_vocab_size': len(kor.vocab), 'eng_vocab_size': len(eng.vocab),
+        params = {'input_dim': len(kor.vocab), 'output_dim': len(eng.vocab),
                   'sos_idx': eng.vocab.stoi['<sos>'], 'eos_idx': eng.vocab.stoi['<eos>'],
                   'pad_idx': eng.vocab.stoi['<pad>'], 'device': device}
 

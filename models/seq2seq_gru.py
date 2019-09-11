@@ -6,9 +6,9 @@ import torch.nn as nn
 class Encoder(nn.Module):
     def __init__(self, params):
         super(Encoder, self).__init__()
-        self.embedding = nn.Embedding(params.kor_vocab_size, params.embed_dim)
+        self.embedding = nn.Embedding(params.input_dim, params.embed_dim)
 
-        # the dropout is used between each layer of a multi-layered RNN.
+        # the dropout is used between each layer of a multi-layered RNN
         # as we only use a single layer, don't pass the dropout as an argument
         self.gru = nn.GRU(params.embed_dim,
                           params.hidden_dim)
@@ -32,12 +32,12 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, params):
         super(Decoder, self).__init__()
-        self.embedding = nn.Embedding(params.eng_vocab_size, params.embed_dim)
+        self.embedding = nn.Embedding(params.output_dim, params.embed_dim)
 
         self.gru = nn.GRU(params.embed_dim + params.hidden_dim,
                           params.hidden_dim)
 
-        self.fc = nn.Linear(params.embed_dim + params.hidden_dim * 2, params.eng_vocab_size)
+        self.fc = nn.Linear(params.embed_dim + params.hidden_dim * 2, params.output_dim)
 
         self.dropout = nn.Dropout(params.dropout)
 
@@ -107,10 +107,10 @@ class Seq2SeqGRU(nn.Module):
         batch_size = target.shape[1]
 
         # define 'outputs' tensor used to store each time step's output ot the decoder
-        outputs = torch.zeros(target_max_len, batch_size, self.params.eng_vocab_size).to(self.params.device)
-        # outputs = [target length, batch size, eng_vocab_size]
+        outputs = torch.zeros(target_max_len, batch_size, self.params.output_dim).to(self.params.device)
+        # outputs = [target length, batch size, output dim]
 
-        # ast hidden state of the encoder will be used as context
+        # last hidden state of the encoder will be used as context
         context = self.encoder(source)
 
         # context also used as the initial hidden state of the decoder
@@ -122,7 +122,7 @@ class Seq2SeqGRU(nn.Module):
 
         for time in range(1, target_max_len):
             output, hidden = self.decoder(output, hidden, context)
-            # output contains the predicted results which has the size of output dim (eng_vocab_size)
+            # output contains the predicted results which has the size of output dim
             # output = [batch size, output dim]
 
             # store the output of each time step to the 'outputs' tensor

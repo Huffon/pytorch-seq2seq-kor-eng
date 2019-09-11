@@ -6,7 +6,7 @@ import torch.nn as nn
 class Encoder(nn.Module):
     def __init__(self, params):
         super(Encoder, self).__init__()
-        self.embedding = nn.Embedding(params.kor_vocab_size, params.embed_dim)
+        self.embedding = nn.Embedding(params.input_dim, params.embed_dim)
 
         self.lstm = nn.LSTM(params.embed_dim,
                             params.hidden_dim,
@@ -35,14 +35,14 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, params):
         super(Decoder, self).__init__()
-        self.embedding = nn.Embedding(params.eng_vocab_size, params.embed_dim)
+        self.embedding = nn.Embedding(params.output_dim, params.embed_dim)
 
         self.lstm = nn.LSTM(params.embed_dim,
                             params.hidden_dim,
                             params.n_layer,
                             dropout=params.dropout)
 
-        self.fc = nn.Linear(params.hidden_dim, params.eng_vocab_size)
+        self.fc = nn.Linear(params.hidden_dim, params.output_dim)
 
         self.dropout = nn.Dropout(params.dropout)
 
@@ -104,8 +104,8 @@ class Seq2Seq(nn.Module):
         batch_size = target.shape[1]
 
         # define 'outputs' tensor used to store each time step's output ot the decoder
-        outputs = torch.zeros(target_max_len, batch_size, self.params.eng_vocab_size).to(self.params.device)
-        # outputs = [target length, batch size, eng_vocab_size]
+        outputs = torch.zeros(target_max_len, batch_size, self.params.output_dim).to(self.params.device)
+        # outputs = [target length, batch size, output dim]
 
         # last hidden and cell states of the encoder is used to initialize the initial hidden state of the decoder
         hidden, cell = self.encoder(source)
@@ -116,7 +116,7 @@ class Seq2Seq(nn.Module):
 
         for time in range(1, target_max_len):
             output, hidden, cell = self.decoder(output, hidden, cell)
-            # output contains the predicted results which has the size of output dim (eng_vocab_size)
+            # output contains the predicted results which has the size of output dim
             # output = [batch size, output dim]
 
             # store the output of each time step to the 'outputs' tensor

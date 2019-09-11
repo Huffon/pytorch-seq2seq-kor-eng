@@ -20,7 +20,6 @@ def predict(params):
     params = params_dict[params.model]
 
     # load tokenizer and torchtext Fields
-
     pickle_tokenizer = open('pickles/tokenizer.pickle', 'rb')
     cohesion_scores = pickle.load(pickle_tokenizer)
     tokenizer = LTokenizer(scores=cohesion_scores)
@@ -32,13 +31,13 @@ def predict(params):
     eng = pickle.load(pickle_eng)
 
     model_type = {
-        'seq2seq': Seq2Seq(params),
-        'seq2seq_gru': Seq2SeqGRU(params),
-        'seq2seq_attention': Seq2SeqAttention(params),
+        'seq2seq': Seq2Seq,
+        'seq2seq_gru': Seq2SeqGRU,
+        'seq2seq_attention': Seq2SeqAttention,
     }
 
     # select model and load trained model
-    model = model_type[params.model]
+    model = model_type[params.model](params)
     model.load_state_dict(torch.load(params.save_model))
     model.eval()
 
@@ -59,7 +58,7 @@ def predict(params):
     translation = [eng.vocab.itos[token] for token in translation_tensor]
     translation = ' '.join(translation[1:])
 
-    print(f'"{params.input}" is translated into "{translation}"')
+    print(f'"{config.input}" is translated into "{translation}"')
 
 
 if __name__ == '__main__':
