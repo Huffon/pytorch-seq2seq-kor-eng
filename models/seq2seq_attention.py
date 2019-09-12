@@ -50,7 +50,7 @@ class Attention(nn.Module):
 
     def forward(self, hidden, encoder_output, mask):
         # takes previous hidden state from the decoder and stacked hidden states from the encoder
-        # hidden         = [batch size, hidden dim]
+        # hidden         = [batch size, dec hidden dim]
         # encoder_output = [source length, batch size, enc hidden dim * 2]
         # mask           = [batch size, source length]
         # mask consists of 1 when the source sentence token is not a padding token, and 0 when it is a padding token
