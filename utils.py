@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import pickle
 from pathlib import Path
@@ -49,6 +50,19 @@ def load_dataset(mode):
         return test_data
 
 
+def clean_text(text):
+    """
+    remove special characters from the input sentence to normalize it
+    Args:
+        text: (string) text string which may contain special character
+
+    Returns:
+        normalized sentence
+    """
+    text = re.sub('[-=+,#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`…》]', '', text)
+    return text
+
+
 def convert_to_dataset(data, kor, eng):
     """
     Pre-process input DataFrame and convert pandas DataFrame to torchtext Dataset.
@@ -65,7 +79,7 @@ def convert_to_dataset(data, kor, eng):
     data = data.drop(missing_rows)
 
     # convert each row of DataFrame to torchtext 'Example' containing 'kor' and 'eng' Fields
-    list_of_examples = [Example.fromlist(row.tolist(),
+    list_of_examples = [Example.fromlist(row.apply(lambda x: clean_text(x)).tolist(),
                                          fields=[('kor', kor), ('eng', eng)]) for _, row in data.iterrows()]
 
     # construct torchtext 'Dataset' using torchtext 'Example' list

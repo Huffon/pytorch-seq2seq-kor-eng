@@ -20,8 +20,9 @@ It is really nice and easy to use, you should try if you handle Korean sentences
 - Number of test data: 15,000
 ```
 Example: 
-{'kor': '['반품', '배송', '비는', '어떻게', '환불', '받을', '수', '있나요?']'
- 'eng': '['how', 'can', 'i', 'get', 'refund', 'of', 'delivery', 'fee', 'for', 'return', '?']'
+{
+ 'kor': '['부러진', '날개로', '다시한번', '날개짓을', '하라']',
+ 'eng': '['wings', 'once', 'again', 'with', 'broken', 'wings']'
 }
 ```
 <br/>
@@ -69,18 +70,18 @@ python build_pickle.py --kor_vocab KOREAN_VOCAB_SIZE --eng_vocab ENGLISH_VOCAB_S
 - For training, run `main.py` with train mode (which is default option)
 
 ```
-python main.py --model MODEL_NAME --save_model MODEL_NAME_TO_SAVE
+python main.py --model MODEL_NAME
 ```
 
 - For testing, run `main.py` with test mode
 
 ```
-python main.py --model MODEL_NAME --mode test --save_model SAVED_MODEL
+python main.py --model MODEL_NAME --mode test
 ```
 
 - For predicting, run `predict.py` with your Korean input sentence. 
 - *Don't forget to wrap your input with double quotation mark !*
 
 ```
-python predict.py --model MODEL_NAME --input "YOUR_KOREAN_INPUT" --save_model SAVED_MODEL
+python predict.py --model MODEL_NAME --input "YOUR_KOREAN_INPUT"
 ```

@@ -20,12 +20,12 @@ def build_tokenizer():
     print(f'Now building soy-nlp tokenizer . . .')
 
     data_dir = Path().cwd() / 'data'
-    train_file = os.path.join(data_dir, 'train.csv')
+    train_file = os.path.join(data_dir, 'train_soynlp.csv')
 
     df = pd.read_csv(train_file, encoding='utf-8')
 
     # if encounters non-text row, we should skip it
-    kor_lines = [row.korean for _, row in df.iterrows() if type(row.korean) == str and type(row.english) == str]
+    kor_lines = [row.korean for _, row in df.iterrows() if type(row.korean) == str]
 
     word_extractor = WordExtractor(min_frequency=5)
     word_extractor.train(kor_lines)
