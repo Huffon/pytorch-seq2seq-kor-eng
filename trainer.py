@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from utils import init_weights, epoch_time
+from utils import init_weights, init_weights_gru, init_weights_attention, epoch_time
 from models.seq2seq import Seq2Seq
 from models.seq2seq_gru import Seq2SeqGRU
 from models.seq2seq_attention import Seq2SeqAttention
@@ -53,7 +53,13 @@ class Trainer:
         best_valid_loss = float('inf')
 
         self.model.train()
-        self.model.apply(init_weights)
+
+        if self.params.model == 'seq2seq':
+            self.model.apply(init_weights)
+        elif self.params.model == 'seq2seq_gru':
+            self.model.apply(init_weights_gru)
+        elif self.params.model == 'seq2seq_attention':
+            self.model.apply(init_weights_attention)
 
         print(self.model)
 

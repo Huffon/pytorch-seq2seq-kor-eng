@@ -149,29 +149,28 @@ def make_iter(batch_size, mode, train_data=None, valid_data=None, test_data=None
 
 def init_weights(model):
     """
-    Seq2Seq paper introduces the method to properly initialize the model's parameter.
-    GRU paper states the parameters are initialized from a normal distribution with a mean of 0 and a stdev of 0.01.
-    And this 'init_weights ' method implements those methodologies
+    following 'init_weights ' methods implement methodologies to initialize models
     Args:
         model: Sequence-to-sequence Model object
 
     Returns:
         
     """
-    if type(model) == type(Seq2Seq):
-        for _, param in model.named_parameters():
-            nn.init.uniform_(param.data, -0.08, 0.08)
+    for _, param in model.named_parameters():
+        nn.init.uniform_(param.data, -0.08, 0.08)
 
-    elif type(model) == type(Seq2SeqGRU):
-        for _, param in model.named_parameters():
+
+def init_weights_gru(model):
+    for _, param in model.named_parameters():
+        nn.init.normal_(param.data, mean=0, std=0.01)
+
+
+def init_weights_attention(model):
+    for name, param in model.named_parameters():
+        if 'weight' in name:
             nn.init.normal_(param.data, mean=0, std=0.01)
-
-    elif type(model) == type(Seq2SeqAttention):
-        for name, param in m.named_parameters():
-            if 'weight' in name:
-                nn.init.normal_(param.data, mean=0, std=0.01)
-            else:
-                nn.init.constant_(param.data, 0)
+        else:
+            nn.init.constant_(param.data, 0)
 
 
 def epoch_time(start_time, end_time):
