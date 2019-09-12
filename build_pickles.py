@@ -13,7 +13,7 @@ from soynlp.tokenizer import LTokenizer
 
 def build_tokenizer():
     """
-    Train soynlp tokenizer which will be used to tokenize Korean input sentence using training corpus
+    Train soynlp tokenizer which will be used to tokenize Korean input sentence using whole corpus
     Returns:
 
     """
