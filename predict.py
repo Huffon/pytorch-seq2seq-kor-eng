@@ -62,7 +62,6 @@ def predict(config):
 
     # convert input into tensor and forward it through selected model
     tokenized = tokenizer.tokenize(input)
-    tokenized = ['<sos>'] + tokenized + ['<eos>']
     indexed = [kor.vocab.stoi[token] for token in tokenized]
 
     source_length = torch.LongTensor([len(indexed)]).to(params.device)

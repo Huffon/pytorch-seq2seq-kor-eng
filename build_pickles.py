@@ -52,8 +52,6 @@ def build_vocab(config):
 
     # include lengths of the source sentences to use pack pad sequence
     kor = ttd.Field(tokenize=tokenizer.tokenize,
-                    init_token='<sos>',
-                    eos_token='<eos>',
                     lower=True,
                     include_lengths=True)
 
