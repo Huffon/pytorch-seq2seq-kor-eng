@@ -68,8 +68,6 @@ def convert_to_dataset(data, kor, eng):
     list_of_examples = [Example.fromlist(row.tolist(),
                                          fields=[('kor', kor), ('eng', eng)]) for _, row in data.iterrows()]
 
-    list_of_examples = list_of_examples[:10000]
-
     # construct torchtext 'Dataset' using torchtext 'Example' list
     dataset = Dataset(examples=list_of_examples, fields=[('kor', kor), ('eng', eng)])
 

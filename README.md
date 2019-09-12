@@ -15,14 +15,13 @@ It is really nice and easy to use, you should try if you handle Korean sentences
 <br/>
 
 ### Overview
-- Number of train data: 86,200
-- Number of validation data: 36,900
-- Number of test data: 41,000
+- Number of train data: 45,000
+- Number of validation data: 15,000
+- Number of test data: 15,000
 ```
 Example: 
-{
-{'kor': '['이', '문서는', '제출', '할', '필요', '없어요']', 
- 'eng': '['You', 'do', "n't", 'need', 'to', 'submit', 'this', 'document', '.']'}
+{'kor': '['반품', '배송', '비는', '어떻게', '환불', '받을', '수', '있나요?']'
+ 'eng': '['how', 'can', 'i', 'get', 'refund', 'of', 'delivery', 'fee', 'for', 'return', '?']'
 }
 ```
 <br/>
