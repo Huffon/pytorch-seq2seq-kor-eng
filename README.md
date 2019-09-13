@@ -90,16 +90,16 @@ python predict.py --model MODEL_NAME --input "YOUR_KOREAN_INPUT"
 
 ### Example
 
-- These are well-trained examples, other examples might not be good this much.
+- These are well-trained examples, other inputs might not be good this much.
 
-<img src="img/ex1.png" width=300></img>
+<img src="img/ex1.png" width=500 align="center"></img>
 
 ```
 kor> 오늘 수업에 참여 못해요
 eng> I ca n't attend the class today
 ```
 
-<img src="img/ex2.png" width=300></img>
+<img src="img/ex2.png" width=500 align="center"></img>
 
 ```
 kor> 이 문제는 스스로  해결하고 싶어
