@@ -76,8 +76,8 @@ def predict(config):
         # translation_tensor = [target length] filed with word indices
 
         translation = [eng.vocab.itos[token] for token in translation_tensor][1:]
-
         attention = attention[1:]
+
         display_attention(tokenized, translation, attention)
     else:
         translation_tensor_logits = model(tensor, source_length, None, 0)
@@ -85,8 +85,8 @@ def predict(config):
         translation = [eng.vocab.itos[token] for token in translation_tensor][1:]
 
     translation = ' '.join(translation)
-    print(f'kor> {input}')
-    print(f'eng> {translation}')
+    print(f'kor> {config.input}')
+    print(f'eng> {translation.capitalize()}')
 
 
 def display_attention(candidate, translation, attention):

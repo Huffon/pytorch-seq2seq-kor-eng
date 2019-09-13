@@ -54,6 +54,7 @@ class Trainer:
 
         self.model.train()
 
+        # run the appropriate initialization method for the model
         if self.params.model == 'seq2seq':
             self.model.apply(init_weights)
         elif self.params.model == 'seq2seq_gru':
