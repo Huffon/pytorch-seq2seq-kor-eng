@@ -1,5 +1,6 @@
 import time
 import math
+import random
 
 import torch
 import torch.nn as nn
@@ -9,6 +10,10 @@ from utils import init_weights, init_weights_gru, init_weights_attention, epoch_
 from models.seq2seq import Seq2Seq
 from models.seq2seq_gru import Seq2SeqGRU
 from models.seq2seq_attention import Seq2SeqAttention
+
+random.seed(32)
+torch.manual_seed(32)
+torch.backends.cudnn.deterministic = True
 
 
 class Trainer:
@@ -52,8 +57,6 @@ class Trainer:
 
         best_valid_loss = float('inf')
 
-        self.model.train()
-
         # apply the appropriate initialization method for the model
         if self.params.model == 'seq2seq':
             self.model.apply(init_weights)
@@ -65,8 +68,9 @@ class Trainer:
         print(self.model)
 
         for epoch in range(self.params.num_epoch):
-            epoch_loss = 0
+            self.model.train()
 
+            epoch_loss = 0
             start_time = time.time()
 
             for batch in self.train_iter:
