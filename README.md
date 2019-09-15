@@ -92,14 +92,18 @@ python predict.py --model MODEL_NAME --input "YOUR_KOREAN_INPUT"
 
 - These are well-trained examples, other inputs might not be as good.
 
-<img src="img/ex_1.png" width=500 align="middle"></img>
+<p align="center">
+    <img src="img/ex_1.png" width=500 align="middle"></img>  
+</p>
 
 ```
 kor> 저는 주말에 축구를 해요
 eng> I am going to play soccer in the weekend
 ```
 
-<img src="img/ex_2.png" width=500 align="middle"></img>
+<p align="center">
+    <img src="img/ex_2.png" width=500 align="middle"></img>  
+</p>
 
 ```
 kor> 여행을 떠나고 싶어요
