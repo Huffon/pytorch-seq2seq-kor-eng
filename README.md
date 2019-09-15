@@ -15,14 +15,14 @@ It is really nice and easy to use, you should try if you handle Korean sentences
 <br/>
 
 ### Overview
-- Number of train data: 45,000
-- Number of validation data: 15,000
-- Number of test data: 15,000
+- Number of train data: 55,000
+- Number of validation data: 10,000
+- Number of test data: 10,000
 ```
 Example: 
 {
-	'kor': '['부러진', '날개로', '다시한번', '날개짓을', '하라']',
-	'eng': '['wings', 'once', 'again', 'with', 'broken', 'wings']'
+  'kor': '['부러진', '날개로', '다시한번', '날개짓을', '하라']',
+  'eng': '['wings', 'once', 'again', 'with', 'broken', 'wings']'
 }
 ```
 <br/>
