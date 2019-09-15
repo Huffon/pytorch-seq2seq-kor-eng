@@ -149,6 +149,7 @@ class Trainer:
             for batch in self.test_iter:
                 sources, sources_lengths = batch.kor
                 targets = batch.eng
+
                 predictions = self.model(sources, sources_lengths, targets, 0)
 
                 predictions = predictions[1:].view(-1, predictions.shape[-1])

@@ -15,7 +15,7 @@ It is really nice and easy to use, you should try if you handle Korean sentences
 <br/>
 
 ### Overview
-- Number of train data: 55,000
+- Number of train data: 75,000
 - Number of validation data: 10,000
 - Number of test data: 10,000
 ```
@@ -41,7 +41,7 @@ pandas==0.25.1
 scikit-learn==0.21.3
 soynlp==0.0.493
 spacy==2.1.8
-torch==1.0.1
+torch==1.2.0
 torchtext==0.4.0
 ```
 <br/>
@@ -95,13 +95,13 @@ python predict.py --model MODEL_NAME --input "YOUR_KOREAN_INPUT"
 <img src="img/ex_1.png" width=500 align="middle"></img>
 
 ```
-kor> 오늘 수업에 참여 못해요
-eng> I ca n't attend the class today
+kor> 저는 주말에 축구를 해요
+eng> I am going to play soccer in the weekend
 ```
 
 <img src="img/ex_2.png" width=500 align="middle"></img>
 
 ```
-kor> 이 문제는 스스로  해결하고 싶어
-eng> I want to solve this problem problems
+kor> 여행을 떠나고 싶어요
+eng> I want to go on a trip trip
 ```

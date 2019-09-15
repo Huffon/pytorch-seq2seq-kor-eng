@@ -55,7 +55,9 @@ def predict(config):
 
     # select model and load trained model
     model = model_type[config.model](params)
+
     model.load_state_dict(torch.load(params.save_model))
+    model.to(params.device)
     model.eval()
 
     input = clean_text(config.input)

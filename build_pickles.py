@@ -89,8 +89,8 @@ def build_vocab(config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build pickles used to use model')
 
-    parser.add_argument('--kor_vocab', type=int, default=50000)
-    parser.add_argument('--eng_vocab', type=int, default=25000)
+    parser.add_argument('--kor_vocab', type=int, default=55000)
+    parser.add_argument('--eng_vocab', type=int, default=30000)
 
     config = parser.parse_args()
 

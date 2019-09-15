@@ -4,6 +4,7 @@ cffi==1.12.3
 chardet==3.0.4
 cycler==0.10.0
 cymem==2.0.2
+en-core-web-md==2.1.0
 en-core-web-sm==2.1.0
 idna==2.8
 joblib==0.13.2
@@ -16,7 +17,9 @@ mkl-random==1.0.2
 mkl-service==2.0.2
 murmurhash==1.0.2
 numpy==1.16.4
+olefile==0.46
 pandas==0.25.1
+Pillow==6.1.0
 plac==0.9.6
 preshed==2.0.1
 psutil==5.6.3
@@ -33,8 +36,9 @@ soynlp==0.0.493
 spacy==2.1.8
 srsly==0.1.0
 thinc==7.0.8
-torch==1.0.1
+torch==1.2.0
 torchtext==0.4.0
+torchvision==0.4.0
 tqdm==4.35.0
 urllib3==1.25.3
 wasabi==0.2.2
