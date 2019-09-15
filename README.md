@@ -106,6 +106,6 @@ eng> I am going to play soccer in the weekend
 </p>
 
 ```
-kor> 여행을 떠나고 싶어요
-eng> I want to go on a trip trip
+kor> 내일은 여자친구를 만나요
+eng> I am going to meet a girlfriend
 ```
