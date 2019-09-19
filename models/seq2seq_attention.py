@@ -153,11 +153,11 @@ class Decoder(nn.Module):
         embedded = embedded.squeeze(0)  # [batch size, embed dim]         : current input target token
         weighted = weighted.squeeze(0)  # [batch size, enc hidden dim * 2]: weighted vector made by using attention
 
-        output = self.fc(torch.cat((output, weighted, embedded), dim=1))
-        # output = [batch size, output dim]
+        prediction = self.fc(torch.cat((output, weighted, embedded), dim=1))
+        # prediction = [batch size, output dim]
 
-        # return a predicted output, a new hidden state and attention tensor
-        return output, hidden.squeeze(0), attention.squeeze(1)
+        # return a prediction, a new hidden state and attention tensor
+        return prediction, hidden.squeeze(0), attention.squeeze(1)
 
 
 class Seq2SeqAttention(nn.Module):

@@ -11,10 +11,6 @@ import pandas as pd
 from torchtext import data as ttd
 from torchtext.data import Example, Dataset
 
-from models.seq2seq import Seq2Seq
-from models.seq2seq_gru import Seq2SeqGRU
-from models.seq2seq_attention import Seq2SeqAttention
-
 
 def load_dataset(mode):
     """
