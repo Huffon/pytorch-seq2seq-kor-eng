@@ -34,6 +34,6 @@ if __name__ == '__main__':
     # Basic options
     parser.add_argument('--model', type=str, default='seq2seq', choices=['seq2seq', 'seq2seq_gru', 'seq2seq_attention'])
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
-    config = parser.parse_args()
+    args = parser.parse_args()
 
-    main(config)
+    main(args)

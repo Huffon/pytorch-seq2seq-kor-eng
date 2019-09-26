@@ -81,7 +81,7 @@ class Attention(nn.Module):
         v = self.v.repeat(batch_size, 1).unsqueeze(1)
         # v = [batch size, 1, dec hidden dim]
 
-        # calculate a weighted sum of the "match" over all 'dec hidden dim' elements,
+        # calculate a weighted sum of the "match" over all "dec hidden dim" elements,
         # where the weights are learned (as we learn the parameters of v) # parameterized attention
 
         # bmm is a batch matrix-matrix product: [batch size, a, b] * [batch size, b, c] = [batch size, a, c]

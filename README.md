@@ -12,6 +12,8 @@ I can not upload the used dataset because it requires an approval from AI Hub. Y
 And I also used [**soynlp**](https://github.com/lovit/soynlp) library which is used to tokenize Korean sentence. 
 It is really nice and easy to use, you should try if you handle Korean sentences :)
 
+Currently, the lowest valid and test losses are **4.708** and **4.681** respectively.
+
 <br/>
 
 ### Overview
